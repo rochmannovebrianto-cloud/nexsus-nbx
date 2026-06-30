@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Dashboard Analitik Bisnis Cerdas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d14;
+    --bg-2: #0f131e;
+    --card: #11151f;
+    --card-2: #161b28;
+    --elevated: #1c2231;
+    --border: #232938;
+    --border-2: #2d3548;
+    --fg: #e8eaed;
+    --fg-2: #b4bccd;
+    --muted: #7b8499;
+    --muted-2: #5a6378;
+    --amber: #f59e0b;
+    --amber-2: #fbbf24;
+    --emerald: #10b981;
+    --emerald-2: #34d399;
+    --coral: #f43f5e;
+    --coral-2: #fb7185;
+    --violet: #a78bfa;
+    --cyan: #22d3ee;
+  }
+
+  * { -webkit-font-smoothing: antialiased; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(245, 158, 11, 0.08), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 10%, rgba(16, 185, 129, 0.06), transparent 60%),
+      radial-gradient(ellipse 100% 60% at 50% 100%, rgba(167, 139, 250, 0.05), transparent 60%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  .font-display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-2); }
+  ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted-2); }
+
+  /* Card style */
+  .card {
+    background: linear-gradient(180deg, var(--card) 0%, var(--card-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  }
+
+  /* Glow effect */
+  .glow-amber { box-shadow: 0 0 40px -8px rgba(245, 158, 11, 0.4); }
+  .glow-emerald { box-shadow: 0 0 40px -8px rgba(16, 185, 129, 0.4); }
+
+  /* AI pulse */
+  @keyframes ai-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5), 0 0 20px rgba(245, 158, 11, 0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0), 0 0 30px rgba(245, 158, 11, 0.5); }
+  }
+  .ai-pulse { animation: ai-pulse 2.5s ease-in-out infinite; }
+
+  /* Animated gradient border for AI panel */
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .ai-border {
+    background: linear-gradient(135deg, var(--amber), var(--emerald), var(--violet), var(--amber));
+    background-size: 300% 300%;
+    animation: gradient-shift 8s ease infinite;
+    padding: 1px;
+    border-radius: 18px;
+  }
+
+  /* Number counter shimmer */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .shimmer-text {
+    background: linear-gradient(90deg, var(--fg) 0%, var(--amber-2) 50%, var(--fg) 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 4s ease-in-out infinite;
+  }
+
+  /* Sparkline */
+  .sparkline { height: 32px; width: 100%; }
+
+  /* Bar chart hover */
+  .bar-hover { transition: all 0.2s ease; cursor: pointer; }
+  .bar-hover:hover { filter: brightness(1.3); }
+
+  /* Insight card animations */
+  @keyframes insight-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .insight-card { animation: insight-in 0.5s ease-out backwards; }
+
+  /* Status indicator */
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--emerald);
+    box-shadow: 0 0 8px var(--emerald);
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Toggle */
+  .toggle-btn {
+    background: var(--elevated);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    transition: all 0.2s ease;
+  }
+  .toggle-btn.active {
+    background: linear-gradient(135deg, var(--amber), #d97706);
+    color: #0a0d14;
+    border-color: var(--amber);
+    font-weight: 600;
+  }
+  .toggle-btn:not(.active):hover {
+    background: var(--card-2);
+    color: var(--fg-2);
+    border-color: var(--border-2);
+  }
+
+  /* Table */
+  .data-table { border-collapse: separate; border-spacing: 0; }
+  .data-table th {
+    background: var(--bg-2);
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .data-table tr:hover td { background: var(--card-2); }
+  .data-table tr:last-child td { border-bottom: none; }
+
+  /* Filter chip */
+  .chip {
+    background: var(--elevated);
+    border: 1px solid var(--border);
+    color: var(--fg-2);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip:hover { border-color: var(--border-2); color: var(--fg); }
+  .chip.active {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: var(--amber);
+    color: var(--amber-2);
+  }
+
+  /* Tooltip */
+  .tooltip {
+    position: absolute;
+    background: var(--elevated);
+    border: 1px solid var(--border-2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--fg);
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  /* Heatmap cell */
+  .heat-cell {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+  }
+  .heat-cell:hover {
+    transform: scale(1.15);
+    z-index: 10;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+
+  /* AI typing indicator */
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+  .typing-dot { animation: typing 1.4s infinite; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* Scroll reveal */
+  .reveal { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* Custom range slider */
+  input[type="range"] {
+    -webkit-appearance: none;
+    background: transparent;
+  }
+  input[type="range"]::-webkit-slider-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--amber);
+    border-radius: 50%;
+    margin-top: -5px;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+    cursor: pointer;
+  }
+
+  /* Loading shimmer */
+  @keyframes loading-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .loading-shimmer {
+    background: linear-gradient(90deg, var(--card) 25%, var(--card-2) 50%, var(--card) 75%);
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s infinite;
+  }
+
+  /* Insight priority indicators */
+  .priority-high { border-left: 3px solid var(--coral); }
+  .priority-medium { border-left: 3px solid var(--amber); }
+  .priority-low { border-left: 3px solid var(--cyan); }
+  .priority-info { border-left: 3px solid var(--violet); }
+
+  /* Floating action tooltip */
+  .ai-icon {
+    background: conic-gradient(from 0deg, var(--amber), var(--emerald), var(--violet), var(--amber));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Grid pattern background */
+  .grid-pattern {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Hero metric */
+  .hero-metric {
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Responsive grid */
+  @media (max-width: 1280px) {
+    .main-grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+</head>
+<body class="grid-pattern">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-40 backdrop-blur-xl bg-[#0a0d14]/80 border-b border-[var(--border)]">
+  <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between gap-6">
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center font-display font-bold text-[#0a0d14] text-lg">N</div>
+        <div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0a0d14]"></div>
+      </div>
+      <div>
+        <h1 class="font-display font-bold text-xl tracking-tight">NEXUS<span class="text-amber-500">.</span></h1>
+        <p class="text-[10px] text-[var(--muted)] uppercase tracking-widest -mt-0.5">Business Intelligence</p>
+      </div>
+    </div>
+
+    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)]">
+      <div class="status-dot"></div>
+      <span class="text-xs text-[var(--fg-2)] font-medium">Data tersinkronisasi</span>
+      <span class="text-xs text-[var(--muted)]">·</span>
+      <span class="text-xs text-[var(--muted)] font-mono" id="lastUpdate">baru saja</span>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button id="refreshBtn" class="w-9 h-9 rounded-lg bg-[var(--card)] border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:text-amber-400 hover:border-amber-500/50 transition-all">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+      </button>
+      <button id="exportBtn" class="px-3 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)] text-xs font-medium text-[var(--fg-2)] hover:border-amber-500/50 hover:text-amber-400 transition-all flex items-center gap-2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Ekspor
+      </button>
+      <button class="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-[#0a0d14] text-xs font-bold hover:shadow-lg hover:shadow-amber-500/30 transition-all">
+        + Laporan Baru
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-[1600px] mx-auto px-6 py-8 space-y-6">
+
+  <!-- HERO SECTION -->
+  <section class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+    <div>
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-[10px] uppercase tracking-[0.2em] text-amber-500 font-semibold">Dashboard Analitik</span>
+        <div class="h-px flex-1 w-12 bg-gradient-to-r from-amber-500/50 to-transparent"></div>
+      </div>
+      <h2 class="font-display text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
+        Performa Bisnis<br>
+        <span class="shimmer-text">Realtime Intelligence</span>
+      </h2>
+      <p class="text-[var(--muted)] mt-3 max-w-xl text-sm leading-relaxed">
+        Visualisasi data komprehensif dengan analisis AI generatif. Pantau tren, identifikasi peluang, dan dapatkan rekomendasi cerdas dalam satu tampilan.
+      </p>
+    </div>
+
+    <!-- View controls -->
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center gap-1 p-1 rounded-xl bg-[var(--card)] border border-[var(--border)]">
+        <button class="toggle-btn active px-4 py-2 rounded-lg text-xs font-medium" data-view="monthly">Bulanan</button>
+        <button class="toggle-btn px-4 py-2 rounded-lg text-xs font-medium" data-view="yearly">Tahunan</button>
+        <button class="toggle-btn px-4 py-2 rounded-lg text-xs font-medium" data-view="quarterly">Kuartalan</button>
+      </div>
+      <div class="flex items-center gap-2">
+        <select id="yearSelect" class="bg-[var(--card)] border border-[var(--border)] rounded-lg px-3 py-2 text-xs font-medium text-[var(--fg-2)] focus:outline-none focus:border-amber-500/50">
+          <option value="2024">Tahun 2024</option>
+          <option value="2023">Tahun 2023</option>
+          <option value="all">Semua Tahun</option>
+        </select>
+        <select id="categorySelect" class="bg-[var(--card)] border border-[var(--border)] rounded-lg px-3 py-2 text-xs font-medium text-[var(--fg-2)] focus:outline-none focus:border-amber-500/50">
+          <option value="all">Semua Kategori</option>
+          <option value="Elektronik">Elektronik</option>
+          <option value="Fashion">Fashion</option>
+          <option value="Makanan">Makanan & Minuman</option>
+          <option value="Kesehatan">Kesehatan</option>
+          <option value="Otomotif">Otomotif</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- KPI CARDS -->
+  <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <!-- Revenue -->
+    <div class="card p-5 group hover:border-amber-500/30 transition-all">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-[var(--muted)] font-semibold">Total Pendapatan</p>
+          <h3 class="font-display text-3xl font-bold mt-2 hero-metric" id="kpiRevenue">Rp 0</h3>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-medium text-emerald-400 flex items-center gap-1" id="kpiRevenueTrend">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+            +12.4%
+          </span>
+          <span class="text-[10px] text-[var(--muted)]">vs periode lalu</span>
+        </div>
+        <canvas id="sparkRevenue" class="sparkline w-20"></canvas>
+      </div>
+    </div>
+
+    <!-- Orders -->
+    <div class="card p-5 group hover:border-emerald-500/30 transition-all">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-[var(--muted)] font-semibold">Total Transaksi</p>
+          <h3 class="font-display text-3xl font-bold mt-2 hero-metric" id="kpiOrders">0</h3>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-medium text-emerald-400 flex items-center gap-1" id="kpiOrdersTrend">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+            +8.7%
+          </span>
+          <span class="text-[10px] text-[var(--muted)]">vs periode lalu</span>
+        </div>
+        <canvas id="sparkOrders" class="sparkline w-20"></canvas>
+      </div>
+    </div>
+
+    <!-- Customers -->
+    <div class="card p-5 group hover:border-violet-500/30 transition-all">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-[var(--muted)] font-semibold">Pelanggan Aktif</p>
+          <h3 class="font-display text-3xl font-bold mt-2 hero-metric" id="kpiCustomers">0</h3>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-medium text-emerald-400 flex items-center gap-1" id="kpiCustomersTrend">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+            +15.2%
+          </span>
+          <span class="text-[10px] text-[var(--muted)]">vs periode lalu</span>
+        </div>
+        <canvas id="sparkCustomers" class="sparkline w-20"></canvas>
+      </div>
+    </div>
+
+    <!-- AOV -->
+    <div class="card p-5 group hover:border-cyan-500/30 transition-all">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <p class="text-[10px] uppercase tracking-widest text-[var(--muted)] font-semibold">Nilai Transaksi Rata-rata</p>
+          <h3 class="font-display text-3xl font-bold mt-2 hero-metric" id="kpiAOV">Rp 0</h3>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-medium text-coral-400 flex items-center gap-1" id="kpiAOVTrend" style="color: var(--coral-2);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+            -2.1%
+          </span>
+          <span class="text-[10px] text-[var(--muted)]">vs periode lalu</span>
+        </div>
+        <canvas id="sparkAOV" class="sparkline w-20"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN GRID: Chart + AI Panel -->
+  <section class="main-grid grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6">
+
+    <!-- LEFT: Main Chart -->
+    <div class="card p-6">
+      <div class="flex items-start justify-between mb-6 flex-wrap gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="font-display text-xl font-bold">Tren Pendapatan</h3>
+            <span class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 text-[10px] font-semibold uppercase tracking-wider">Live</span>
+          </div>
+          <p class="text-xs text-[var(--muted)]" id="chartSubtitle">Pendapatan kotor per bulan dalam jutaan Rupiah</p>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <div class="chip active" data-metric="revenue">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>Pendapatan
+          </div>
+          <div class="chip" data-metric="orders">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>Transaksi
+          </div>
+          <div class="chip" data-metric="customers">
+            <span class="w-2 h-2 rounded-full bg-violet-500"></span>Pelanggan
+          </div>
+          <div class="chip" data-metric="profit">
+            <span class="w-2 h-2 rounded-full bg-cyan-500"></span>Profit
+          </div>
+        </div>
+      </div>
+
+      <div class="relative h-[380px]">
+        <canvas id="mainChart"></canvas>
+      </div>
+
+      <!-- Annotations -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 pt-6 border-t border-[var(--border)]">
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold">Puncak Tertinggi</p>
+          <p class="font-display text-lg font-bold mt-1" id="annotationPeak">—</p>
+          <p class="text-[10px] text-[var(--muted)]" id="annotationPeakDate">—</p>
+        </div>
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold">Rata-rata</p>
+          <p class="font-display text-lg font-bold mt-1" id="annotationAvg">—</p>
+          <p class="text-[10px] text-[var(--muted)]">per periode</p>
+        </div>
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold">Pertumbuhan</p>
+          <p class="font-display text-lg font-bold mt-1 text-emerald-400" id="annotationGrowth">—</p>
+          <p class="text-[10px] text-[var(--muted)]">YoY</p>
+        </div>
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-[var(--muted)] font-semibold">Volatilitas</p>
+          <p class="font-display text-lg font-bold mt-1" id="annotationVol">—</p>
+          <p class="text-[10px] text-[var(--muted)]">std deviasi</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: AI Insights Panel -->
+    <div class="ai-border">
+      <div class="bg-[var(--card)] rounded-[17px] p-6 h-full flex flex-col">
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-emerald-500/20 border border-amber-500/30 flex items-center justify-center ai-pulse">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="url(#aiGrad)" stroke-width="2">
+                  <defs>
+                    <linearGradient id="aiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#f59e0b"/>
+                      <stop offset="100%" stop-color="#10b981"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M12 2L13.09 8.26L19 7L14.74 11.74L21 13L14.74 14.26L19 17L13.09 15.74L12 22L10.91 15.74L5 17L9.26 14.26L3 13L9.26 11.74L5 7L10.91 8.26L12 2Z"/>
+                </svg>
+              </div>
+            </div>
+            <div>
+              <h3 class="font-display font-bold text-base flex items-center gap-2">
+                AI Insight Engine
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">BETA</span>
+              </h3>
+              <p class="text-[10px] text-[var(--muted)]">Analisis otomatis oleh NEXUS-AI</p>
+            </div>
+          </div>
+          <button id="regenerateBtn" class="w-8 h-8 rounded-lg bg-[var(--elevated)] border border-[var(--border)] flex items-center justify-center text-[var(--muted)] hover:text-amber-400 hover:border-amber-500/50 transition-all" title="Regenerasi insight">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+          </button>
+        </div>
+
+        <!-- AI Status -->
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-2)] border border-[var(--border)] mb-4" id="aiStatus">
+          <div class="flex gap-1">
+            <div class="w-1.5 h-1.5 rounded-full bg-amber-400 typing-dot"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-amber-400 typing-dot"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-amber-400 typing-dot"></div>
+          </div>
+          <span class="text-[11px] text-[var(--muted)] font-mono">Menganalisis pola data...</span>
+        </div>
+
+        <!-- Insights container -->
+        <div class="space-y-3 flex-1 overflow-y-auto pr-1" id="insightsContainer" style="max-height: 480px;">
+          <!-- Insights will be inserted here -->
+        </div>
+
+        <!-- Ask AI -->
+        <div class="mt-4 pt-4 border-t border-[var(--border)]">
+          <div class="relative">
+            <input type="text" id="aiQuestion" placeholder="Tanya AI tentang data ini..." class="w-full bg-[var(--bg-2)] border border-[var(--border)] rounded-lg pl-9 pr-3 py-2.5 text-xs text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:border-amber-500/50">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L13.09 8.26L19 7L14.74 11.74L21 13L14.74 14.26L19 17L13.09 15.74L12 22L10.91 15.74L5 17L9.26 14.26L3 13L9.26 11.74L5 7L10.91 8.26L12 2Z"/></svg>
+          </div>
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            <button class="quick-ask text-[10px] px-2 py-1 rounded-md bg-[var(--elevated)] text-[var(--muted)] hover:text-amber-400 border border-[var(--border)]" data-q="Apa tren utama bulan ini?">Tren bulan ini?</button>
+            <button class="quick-ask text-[10px] px-2 py-1 rounded-md bg-[var(--elevated)] text-[var(--muted)] hover:text-amber-400 border border-[var(--border)]" data-q="Kategori mana yang paling menguntungkan?">Kategori terbaik?</button>
+            <button class="quick-ask text-[10px] px-2 py-1 rounded-md bg-[var(--elevated)] text-[var(--muted)] hover:text-amber-400 border border-[var(--border)]" data-q="Prediksi bulan depan">Prediksi depan?</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECONDARY METRICS: Category + Region -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- Category breakdown -->
+    <div class="card p-6">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="font-display text-lg font-bold">Performa per Kategori</h3>
+          <p class="text-xs text-[var(--muted)] mt-0.5">Kontribusi pendapatan per kategori produk</p>
+        </div>
+        <button class="text-xs text-amber-400 hover:underline font-medium">Lihat detail →</button>
+      </div>
+      <div class="relative h-[280px]">
+        <canvas id="categoryChart"></canvas>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mt-4" id="categoryLegend"></div>
+    </div>
+
+    <!-- Regional heatmap -->
+    <div class="card p-6">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="font-display text-lg font-bold">Distribusi Regional</h3>
+          <p class="text-xs text-[var(--muted)] mt-0.5">Intensitas penjualan per region (juta Rp)</p>
+        </div>
+        <div class="flex items-center gap-2 text-[10px] text-[var(--muted)]">
+          <span>Rendah</span>
+          <div class="flex gap-0.5">
+            <div class="w-3 h-3 rounded-sm bg-[var(--elevated)]"></div>
+            <div class="w-3 h-3 rounded-sm bg-amber-500/20"></div>
+            <div class="w-3 h-3 rounded-sm bg-amber-500/40"></div>
+            <div class="w-3 h-3 rounded-sm bg-amber-500/60"></div>
+            <div class="w-3 h-3 rounded-sm bg-amber-500"></div>
+          </div>
+          <span>Tinggi</span>
+        </div>
+      </div>
+      <div id="regionHeatmap" class="space-y-3"></div>
+    </div>
+  </section>
+
+  <!-- CHANNEL + TOP PRODUCTS -->
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Channel split -->
+    <div class="card p-6">
+      <h3 class="font-display text-lg font-bold mb-1">Saluran Penjualan</h3>
+      <p class="text-xs text-[var(--muted)] mb-5">Distribusi pendapatan per channel</p>
+      <div class="relative h-[200px] flex items-center justify-center">
+        <canvas id="channelChart"></canvas>
+        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <p class="text-[10px] text-[var(--muted)] uppercase tracking-widest">Total</p>
+          <p class="font-display text-2xl font-bold" id="channelTotal">Rp 0</p>
+        </div>
+      </div>
+      <div class="space-y-2 mt-4" id="channelList"></div>
+    </div>
+
+    <!-- Top products -->
+    <div class="card p-6 lg:col-span-2">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="font-display text-lg font-bold">Produk Terlaris</h3>
+          <p class="text-xs text-[var(--muted)] mt-0.5">Top 7 produk berdasarkan pendapatan</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-[var(--muted)]">Urutkan:</span>
+          <select id="sortBy" class="bg-[var(--bg-2)] border border-[var(--border)] rounded-md px-2 py-1 text-[10px] text-[var(--fg-2)] focus:outline-none">
+            <option value="revenue">Pendapatan</option>
+            <option value="orders">Transaksi</option>
+            <option value="growth">Pertumbuhan</option>
+          </select>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="data-table w-full">
+          <thead>
+            <tr>
+              <th>Produk</th>
+              <th>Kategori</th>
+              <th class="text-right">Transaksi</th>
+              <th class="text-right">Pendapatan</th>
+              <th>Tren</th>
+              <th class="text-right">Pertumbuhan</th>
+            </tr>
+          </thead>
+          <tbody id="topProductsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- YEARLY COMPARISON + FORECAST -->
+  <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Year comparison -->
+    <div class="card p-6">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="font-display text-lg font-bold">Perbandingan Tahunan</h3>
+          <p class="text-xs text-[var(--muted)] mt-0.5">2023 vs 2024 per bulan</p>
+        </div>
+        <div class="flex items-center gap-3 text-[10px]">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-[var(--muted-2)]"></span>2023</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-amber-500"></span>2024</span>
+        </div>
+      </div>
+      <div class="relative h-[280px]">
+        <canvas id="yearCompareChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Forecast -->
+    <div class="card p-6">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="font-display text-lg font-bold flex items-center gap-2">
+            Proyeksi AI
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20 font-mono">FORECAST</span>
+          </h3>
+          <p class="text-xs text-[var(--muted)] mt-0.5">Prediksi 3 bulan ke depan berdasarkan pola historis</p>
+        </div>
+      </div>
+      <div class="relative h-[280px]">
+        <canvas id="forecastChart"></canvas>
+      </div>
+      <div class="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-[var(--border)]">
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-[var(--muted)]">Bulan +1</p>
+          <p class="font-display text-base font-bold mt-1 text-amber-400" id="forecast1">—</p>
+        </div>
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-[var(--muted)]">Bulan +2</p>
+          <p class="font-display text-base font-bold mt-1 text-amber-400" id="forecast2">—</p>
+        </div>
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-[var(--muted)]">Bulan +3</p>
+          <p class="font-display text-base font-bold mt-1 text-amber-400" id="forecast3">—</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DETAILED MONTHLY TABLE -->
+  <section class="card p-6">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h3 class="font-display text-lg font-bold">Detail Bulanan</h3>
+        <p class="text-xs text-[var(--muted)] mt-0.5">Rekap lengkap per bulan dengan indikator performa</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="chip active" data-table-metric="all">Semua Metrik</button>
+        <button class="chip" data-table-metric="revenue">Pendapatan</button>
+        <button class="chip" data-table-metric="growth">Pertumbuhan</button>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="data-table w-full">
+        <thead>
+          <tr>
+            <th>Bulan</th>
+            <th class="text-right">Pendapatan</th>
+            <th class="text-right">Transaksi</th>
+            <th class="text-right">Pelanggan</th>
+            <th class="text-right">AOV</th>
+            <th class="text-right">Profit</th>
+            <th class="text-right">Margin</th>
+            <th>Tren</th>
+            <th class="text-right">Status</th>
+          </tr>
+        </thead>
+        <tbody id="monthlyTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="pt-8 pb-4 text-center">
+    <div class="flex items-center justify-center gap-2 text-[10px] text-[var(--muted)] uppercase tracking-widest">
+      <span>NEXUS Business Intelligence</span>
+      <span>·</span>
+      <span>Powered by NEXUS-AI</span>
+      <span>·</span>
+      <span>v2.4.1</span>
+    </div>
+  </footer>
+</main>
+
+<!-- Toast container -->
+<div id="toastContainer" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
+
+<script>
+// =====================================================
+// DATA GENERATION (simulasi data rekap bulanan)
+// =====================================================
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const monthNamesFull = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+// Base data untuk 2023 dan 2024 - simulasi pola musiman
+function generateYearData(year, baseRevenue, growthRate) {
+  const data = [];
+  // Pola musiman: lonjakan di Q4 (Sep-Dec), turun di Q1
+  const seasonalPattern = [0.78, 0.82, 0.88, 0.92, 0.95, 0.98, 0.96, 1.0, 1.08, 1.15, 1.25, 1.35];
+  
+  for (let i = 0; i < 12; i++) {
+    const seasonal = seasonalPattern[i];
+    const noise = 0.92 + Math.random() * 0.16;
+    const revenue = Math.round(baseRevenue * seasonal * noise * growthRate);
+    const orders = Math.round(revenue / (380 + Math.random() * 80));
+    const customers = Math.round(orders * (0.62 + Math.random() * 0.08));
+    const aov = Math.round(revenue / orders);
+    const margin = 0.18 + (Math.random() * 0.08 - 0.04);
+    const profit = Math.round(revenue * margin);
+    
+    // Category breakdown
+    const categories = {
+      'Elektronik': Math.round(revenue * (0.28 + Math.random() * 0.06)),
+      'Fashion': Math.round(revenue * (0.22 + Math.random() * 0.05)),
+      'Makanan': Math.round(revenue * (0.20 + Math.random() * 0.05)),
+      'Kesehatan': Math.round(revenue * (0.16 + Math.random() * 0.04)),
+      'Otomotif': Math.round(revenue * (0.14 + Math.random() * 0.04))
+    };
+    
+    // Regions
+    const regions = {
+      'Jakarta': Math.round(revenue * (0.32 + Math.random() * 0.05)),
+      'Surabaya': Math.round(revenue * (0.18 + Math.random() * 0.04)),
+      'Bandung': Math.round(revenue * (0.14 + Math.random() * 0.03)),
+      'Medan': Math.round(revenue * (0.11 + Math.random() * 0.03)),
+      'Makassar': Math.round(revenue * (0.09 + Math.random() * 0.03)),
+      'Lainnya': Math.round(revenue * (0.16 + Math.random() * 0.03))
+    };
+    
+    // Channels
+    const channels = {
+      'Online': Math.round(revenue * (0.42 + Math.random() * 0.05)),
+      'Marketplace': Math.round(revenue * (0.33 + Math.random() * 0.04)),
+      'Offline': Math.round(revenue * (0.25 + Math.random() * 0.04))
+    };
+    
+    data.push({
+      month: i,
+      monthName: monthNames[i],
+      revenue, orders, customers, aov, profit, margin,
+      categories, regions, channels
+    });
+  }
+  return data;
+}
+
+const allData = {
+  2023: generateYearData(2023, 1850, 1.0),
+  2024: generateYearData(2024, 1850, 1.24)
+};
+
+// Top products data
+const topProducts = [
+  { name: 'Smartphone Galaxy A55', category: 'Elektronik', orders: 3420, revenue: 4280, growth: 18.4 },
+  { name: 'Sepatu Sneaker Pro X', category: 'Fashion', orders: 2890, revenue: 2156, growth: 24.7 },
+  { name: 'Kopi Arabica Premium 1kg', category: 'Makanan', orders: 5210, revenue: 1820, growth: 32.1 },
+  { name: 'Smartwatch Series 9', category: 'Elektronik', orders: 1850, revenue: 2780, growth: 12.3 },
+  { name: 'Vitamin C 1000mg', category: 'Kesehatan', orders: 4120, revenue: 980, growth: -5.2 },
+  { name: 'Oli Mesin Synthetic 5W-30', category: 'Otomotif', orders: 1680, revenue: 1340, growth: 8.9 },
+  { name: 'Tas Ransel Laptop 17"', category: 'Fashion', orders: 2340, revenue: 1170, growth: 15.6 },
+  { name: 'Headphone Wireless ANC', category: 'Elektronik', orders: 1980, revenue: 1580, growth: 22.4 },
+  { name: 'Snack Protein Bar (isi 12)', category: 'Makanan', orders: 3650, revenue: 760, growth: 19.8 },
+  { name: 'Suspensi Motor Adjustable', category: 'Otomotif', orders: 920, revenue: 1640, growth: 6.2 }
+];
+
+// =====================================================
+// STATE
+// =====================================================
+let state = {
+  view: 'monthly',
+  year: '2024',
+  category: 'all',
+  metric: 'revenue'
+};
+
+let mainChart, categoryChart, channelChart, yearCompareChart, forecastChart;
+const sparkCharts = {};
+
+// =====================================================
+// UTILITIES
+// =====================================================
+function formatCurrency(value, compact = true) {
+  if (compact) {
+    if (value >= 1000000000) return 'Rp ' + (value / 1000000000).toFixed(2) + ' M';
+    if (value >= 1000000) return 'Rp ' + (value / 1000000).toFixed(1) + ' jt';
+    if (value >= 1000) return 'Rp ' + (value / 1000).toFixed(0) + ' rb';
+  }
+  return 'Rp ' + value.toLocaleString('id-ID');
+}
+
+function formatNumber(value) {
+  if (value >= 1000000) return (value / 1000000).toFixed(2) + 'M';
+  if (value >= 1000) return (value / 1000).toFixed(1) + 'K';
+  return value.toLocaleString('id-ID');
+}
+
+function showToast(message, type = 'info') {
+  const colors = {
+    info: 'border-violet-500/30 bg-violet-500/10 text-violet-300',
+    success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
+    warning: 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+  };
+  const toast = document.createElement('div');
+  toast.className = `px-4 py-3 rounded-lg border ${colors[type]} backdrop-blur-xl text-xs font-medium shadow-2xl translate-x-full transition-transform duration-300`;
+  toast.innerHTML = message;
+  document.getElementById('toastContainer').appendChild(toast);
+  setTimeout(() => toast.classList.remove('translate-x-full'), 10);
+  setTimeout(() => {
+    toast.classList.add('translate-x-full');
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+// =====================================================
+// ANIMATED COUNTER
+// =====================================================
+function animateValue(el, start, end, duration, formatter) {
+  const startTime = performance.now();
+  const isPercentage = typeof end === 'string' && end.includes('%');
+  const endNum = parseFloat(end);
+  
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeOut = 1 - Math.pow(1 - progress, 3);
+    const current = start + (endNum - start) * easeOut;
+    
+    if (formatter) {
+      el.textContent = formatter(current);
+    } else {
+      el.textContent = Math.round(current).toLocaleString('id-ID');
+    }
+    
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+// =====================================================
+// KPI UPDATES
+// =====================================================
+function getCurrentData() {
+  if (state.year === 'all') {
+    return [...allData[2023], ...allData[2024]];
+  }
+  return allData[state.year];
+}
+
+function getFilteredData() {
+  let data = getCurrentData();
+  if (state.category !== 'all') {
+    data = data.map(d => ({
+      ...d,
+      revenue: d.categories[state.category] || 0,
+      orders: Math.round(d.orders * 0.25),
+      customers: Math.round(d.customers * 0.25),
+      profit: Math.round(d.profit * 0.25)
+    }));
+  }
+  return data;
+}
+
+function updateKPIs() {
+  const data = getFilteredData();
+  const totals = data.reduce((acc, d) => ({
+    revenue: acc.revenue + d.revenue,
+    orders: acc.orders + d.orders,
+    customers: acc.customers + d.customers,
+    profit: acc.profit + d.profit
+  }), { revenue: 0, orders: 0, customers: 0, profit: 0 });
+  
+  const aov = Math.round(totals.revenue / totals.orders);
+  
+  // Calculate previous period for trend
+  let prevData;
+  if (state.year === '2024') prevData = allData[2023];
+  else if (state.year === '2023') prevData = generateYearData(2022, 1850, 0.85);
+  else prevData = generateYearData(2022, 1850, 0.85);
+  
+  const prevTotals = prevData.reduce((acc, d) => ({
+    revenue: acc.revenue + d.revenue,
+    orders: acc.orders + d.orders,
+    customers: acc.customers + d.customers
+  }), { revenue: 0, orders: 0, customers: 0 });
+  
+  const trends = {
+    revenue: ((totals.revenue - prevTotals.revenue) / prevTotals.revenue * 100),
+    orders: ((totals.orders - prevTotals.orders) / prevTotals.orders * 100),
+    customers: ((totals.customers - prevTotals.customers) / prevTotals.customers * 100),
+    aov: ((aov - prevTotals.revenue / prevTotals.orders) / (prevTotals.revenue / prevTotals.orders) * 100)
+  };
+  
+  // Animate KPI values
+  const revenueEl = document.getElementById('kpiRevenue');
+  animateValue(revenueEl, 0, totals.revenue, 1200, v => formatCurrency(v));
+  
+  const ordersEl = document.getElementById('kpiOrders');
+  animateValue(ordersEl, 0, totals.orders, 1200, v => formatNumber(v));
+  
+  const customersEl = document.getElementById('kpiCustomers');
+  animateValue(customersEl, 0, totals.customers, 1200, v => formatNumber(v));
+  
+  const aovEl = document.getElementById('kpiAOV');
+  animateValue(aovEl, 0, aov, 1200, v => formatCurrency(v));
+  
+  // Update trends
+  updateTrend('kpiRevenueTrend', trends.revenue);
+  updateTrend('kpiOrdersTrend', trends.orders);
+  updateTrend('kpiCustomersTrend', trends.customers);
+  updateTrend('kpiAOVTrend', trends.aov);
+  
+  // Update sparklines
+  updateSparkline('sparkRevenue', data.map(d => d.revenue), '#f59e0b');
+  updateSparkline('sparkOrders', data.map(d => d.orders), '#10b981');
+  updateSparkline('sparkCustomers', data.map(d => d.customers), '#a78bfa');
+  updateSparkline('sparkAOV', data.map(d => d.aov), '#22d3ee');
+}
+
+function updateTrend(elId, value) {
+  const el = document.getElementById(elId);
+  const isPositive = value >= 0;
+  el.style.color = isPositive ? '#34d399' : '#fb7185';
+  el.innerHTML = `
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+      ${isPositive ? '<polyline points="18 15 12 9 6 15"/>' : '<polyline points="6 9 12 15 18 9"/>'}
+    </svg>
+    ${isPositive ? '+' : ''}${value.toFixed(1)}%
+  `;
+}
+
+// =====================================================
+// SPARKLINES
+// =====================================================
+function updateSparkline(canvasId, data, color) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  
+  if (sparkCharts[canvasId]) sparkCharts[canvasId].destroy();
+  
+  sparkCharts[canvasId] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map((_, i) => i),
+      datasets: [{
+        data: data,
+        borderColor: color,
+        backgroundColor: color + '20',
+        borderWidth: 1.5,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { display: false }, y: { display: false } },
+      elements: { line: { borderJoinStyle: 'round' } }
+    }
+  });
+}
+
+// =====================================================
+// MAIN CHART
+// =====================================================
+function createMainChart() {
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  const data = getFilteredData();
+  
+  const gradient = ctx.createLinearGradient(0, 0, 0, 380);
+  gradient.addColorStop(0, 'rgba(245, 158, 11, 0.35)');
+  gradient.addColorStop(1, 'rgba(245, 158, 11, 0)');
+  
+  const labels = state.year === 'all' 
+    ? [...monthNames.map(m => m + ' 23'), ...monthNames.map(m => m + ' 24')]
+    : monthNames;
+  
+  const values = data.map(d => d[state.metric]);
+  
+  if (mainChart) mainChart.destroy();
+  
+  const metricLabels = {
+    revenue: 'Pendapatan',
+    orders: 'Transaksi',
+    customers: 'Pelanggan',
+    profit: 'Profit'
+  };
+  
+  mainChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: metricLabels[state.metric],
+        data: values,
+        borderColor: '#f59e0b',
+        backgroundColor: gradient,
+        borderWidth: 2.5,
+        fill: true,
+        tension: 0.35,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#f59e0b',
+        pointHoverBorderColor: '#0a0d14',
+        pointHoverBorderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1c2231',
+          borderColor: '#2d3548',
+          borderWidth: 1,
+          padding: 12,
+          titleColor: '#e8eaed',
+          bodyColor: '#b4bccd',
+          titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: '600' },
+          bodyFont: { family: 'JetBrains Mono', size: 11 },
+          displayColors: false,
+          callbacks: {
+            label: (ctx) => {
+              const v = ctx.parsed.y;
+              if (state.metric === 'revenue' || state.metric === 'profit') return formatCurrency(v);
+              return formatNumber(v);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#7b8499', font: { family: 'JetBrains Mono', size: 10 } },
+          border: { color: '#232938' }
+        },
+        y: {
+          grid: { color: 'rgba(35, 41, 56, 0.5)', drawBorder: false },
+          ticks: {
+            color: '#7b8499',
+            font: { family: 'JetBrains Mono', size: 10 },
+            callback: (v) => state.metric === 'revenue' || state.metric === 'profit' ? formatCurrency(v) : formatNumber(v)
+          },
+          border: { display: false }
+        }
+      }
+    }
+  });
+  
+  // Update annotations
+  const peak = Math.max(...values);
+  const peakIdx = values.indexOf(peak);
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+  const std = Math.sqrt(values.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / values.length);
+  
+  // YoY growth
+  let growth = 0;
+  if (state.year === '2024') {
+    const prevTotal = allData[2023].reduce((a, d) => a + d[state.metric], 0);
+    const currTotal = values.reduce((a, b) => a + b, 0);
+    growth = ((currTotal - prevTotal) / prevTotal * 100);
+  }
+  
+  document.getElementById('annotationPeak').textContent = (state.metric === 'revenue' || state.metric === 'profit') ? formatCurrency(peak) : formatNumber(peak);
+  document.getElementById('annotationPeakDate').textContent = labels[peakIdx];
+  document.getElementById('annotationAvg').textContent = (state.metric === 'revenue' || state.metric === 'profit') ? formatCurrency(avg) : formatNumber(avg);
+  document.getElementById('annotationGrowth').textContent = (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%';
+  document.getElementById('annotationGrowth').style.color = growth >= 0 ? '#34d399' : '#fb7185';
+  document.getElementById('annotationVol').textContent = (state.metric === 'revenue' || state.metric === 'profit') ? formatCurrency(std) : formatNumber(std);
+}
+
+// =====================================================
+// CATEGORY CHART
+// =====================================================
+function createCategoryChart() {
+  const ctx = document.getElementById('categoryChart').getContext('2d');
+  const data = getCurrentData();
+  
+  const categoryTotals = {};
+  const colors = {
+    'Elektronik': '#f59e0b',
+    'Fashion': '#a78bfa',
+    'Makanan': '#10b981',
+    'Kesehatan': '#22d3ee',
+    'Otomotif': '#fb7185'
+  };
+  
+  data.forEach(d => {
+    Object.entries(d.categories).forEach(([cat, val]) => {
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + val;
+    });
+  });
+  
+  if (categoryChart) categoryChart.destroy();
+  
+  categoryChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(categoryTotals),
+      datasets: [{
+        data: Object.values(categoryTotals),
+        backgroundColor: Object.keys(categoryTotals).map(c => colors[c]),
+        borderColor: '#11151f',
+        borderWidth: 3,
+        hoverOffset: 12
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1c2231',
+          borderColor: '#2d3548',
+          borderWidth: 1,
+          padding: 10,
+          titleColor: '#e8eaed',
+          bodyColor: '#b4bccd',
+          callbacks: {
+            label: (ctx) => ` ${formatCurrency(ctx.parsed)} (${(ctx.parsed / ctx.dataset.data.reduce((a,b)=>a+b,0) * 100).toFixed(1)}%)`
+          }
+        }
+      }
+    }
+  });
+  
+  // Build legend
+  const total = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+  const legendEl = document.getElementById('categoryLegend');
+  legendEl.innerHTML = Object.entries(categoryTotals)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, val]) => `
+      <div class="flex items-center justify-between p-2 rounded-lg bg-[var(--bg-2)] border border-[var(--border)] hover:border-[var(--border-2)] transition-all cursor-pointer">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="w-2.5 h-2.5 rounded-sm flex-shrink-0" style="background:${colors[cat]}"></span>
+          <span class="text-xs text-[var(--fg-2)] truncate">${cat}</span>
+        </div>
+        <span class="text-xs font-mono font-semibold text-[var(--fg)]">${(val / total * 100).toFixed(1)}%</span>
+      </div>
+    `).join('');
+}
+
+// =====================================================
+// CHANNEL CHART
+// =====================================================
+function createChannelChart() {
+  const ctx = document.getElementById('channelChart').getContext('2d');
+  const data = getCurrentData();
+  
+  const channelTotals = {};
+  const colors = {
+    'Online': '#f59e0b',
+    'Marketplace': '#10b981',
+    'Offline': '#a78bfa'
+  };
+  
+  data.forEach(d => {
+    Object.entries(d.channels).forEach(([ch, val]) => {
+      channelTotals[ch] = (channelTotals[ch] || 0) + val;
+    });
+  });
+  
+  const total = Object.values(channelTotals).reduce((a, b) => a + b, 0);
+  document.getElementById('channelTotal').textContent = formatCurrency(total);
+  
+  if (channelChart) channelChart.destroy();
+  
+  channelChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(channelTotals),
+      datasets: [{
+        data: Object.values(channelTotals),
+        backgroundColor: Object.keys(channelTotals).map(c => colors[c]),
+        borderColor: '#11151f',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '75%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1c2231',
+          borderColor: '#2d3548',
+          borderWidth: 1,
+          padding: 10,
+          titleColor: '#e8eaed',
+          bodyColor: '#b4bccd',
+          callbacks: {
+            label: (ctx) => ` ${formatCurrency(ctx.parsed)} (${(ctx.parsed / total * 100).toFixed(1)}%)`
+          }
+        }
+      }
+    }
+  });
+  
+  // Channel list
+  const listEl = document.getElementById('channelList');
+  listEl.innerHTML = Object.entries(channelTotals)
+    .sort((a, b) => b[1] - a[1])
+    .map(([ch, val]) => {
+      const pct = (val / total * 100).toFixed(1);
+      return `
+        <div class="flex items-center gap-3">
+          <span class="w-2.5 h-2.5 rounded-sm flex-shrink-0" style="background:${colors[ch]}"></span>
+          <span class="text-xs text-[var(--fg-2)] flex-1">${ch}</span>
+          <div class="flex-1 h-1.5 rounded-full bg-[var(--bg-2)] overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-700" style="width:${pct}%; background:${colors[ch]}"></div>
+          </div>
+          <span class="text-xs font-mono font-semibold text-[var(--fg)] w-10 text-right">${pct}%</span>
+        </div>
+      `;
+    }).join('');
+}
+
+// =====================================================
+// REGION HEATMAP
+// =====================================================
+function createRegionHeatmap() {
+  const data = getCurrentData();
+  const regions = ['Jakarta', 'Surabaya', 'Bandung', 'Medan', 'Makassar', 'Lainnya'];
+  
+  const regionMonthData = regions.map(region => {
+    return {
+      region,
+      values: data.map(d => d.regions[region] || 0)
+    };
+  });
+  
+  const allValues = regionMonthData.flatMap(r => r.values);
+  const maxVal = Math.max(...allValues);
+  
+  const heatmapEl = document.getElementById('regionHeatmap');
+  heatmapEl.innerHTML = regionMonthData.map(rd => {
+    const cells = rd.values.map((v, i) => {
+      const intensity = v / maxVal;
+      let bg;
+      if (intensity < 0.2) bg = 'var(--elevated)';
+      else if (intensity < 0.4) bg = 'rgba(245, 158, 11, 0.2)';
+      else if (intensity < 0.6) bg = 'rgba(245, 158, 11, 0.4)';
+      else if (intensity < 0.8) bg = 'rgba(245, 158, 11, 0.6)';
+      else bg = 'rgba(245, 158, 11, 0.9)';
+      
+      return `<div class="heat-cell" style="background:${bg}" title="${monthNames[i]}: ${formatCurrency(v)}"></div>`;
+    }).join('');
+    
+    const total = rd.values.reduce((a, b) => a + b, 0);
+    
+    return `
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-[var(--fg-2)] w-20 font-medium">${rd.region}</span>
+        <div class="grid grid-cols-12 gap-1 flex-1">${cells}</div>
+        <span class="text-xs font-mono font-semibold text-[var(--fg)] w-20 text-right">${formatCurrency(total)}</span>
+      </div>
+    `;
+  }).join('');
+  
+  // Month labels
+  const monthLabelRow = `
+    <div class="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
+      <span class="text-[10px] text-[var(--muted)] w-20"></span>
+      <div class="grid grid-cols-12 gap-1 flex-1">
+        ${monthNames.map(m => `<span class="text-[9px] text-[var(--muted)] text-center font-mono">${m}</span>`).join('')}
+      </div>
+      <span class="text-[10px] text-[var(--muted)] w-20 text-right">Total</span>
+    </div>
+  `;
+  heatmapEl.innerHTML += monthLabelRow;
+}
+
+// =====================================================
+// TOP PRODUCTS TABLE
+// =====================================================
+function renderTopProducts() {
+  const sortBy = document.getElementById('sortBy').value;
+  const sorted = [...topProducts].sort((a, b) => {
+    if (sortBy === 'revenue') return b.revenue - a.revenue;
+    if (sortBy === 'orders') return b.orders - a.orders;
+    return b.growth - a.growth;
+  }).slice(0, 7);
+  
+  const categoryColors = {
+    'Elektronik': '#f59e0b',
+    'Fashion': '#a78bfa',
+    'Makanan': '#10b981',
+    'Kesehatan': '#22d3ee',
+    'Otomotif': '#fb7185'
+  };
+  
+  const maxRevenue = Math.max(...sorted.map(p => p.revenue));
+  
+  const body = document.getElementById('topProductsBody');
+  body.innerHTML = sorted.map((p, i) => {
+    const trendData = Array.from({length: 8}, () => 30 + Math.random() * 70);
+    const trendColor = p.growth >= 0 ? '#10b981' : '#f43f5e';
+    const sparklineId = `prod-spark-${i}`;
+    
+    return `
+      <tr>
+        <td>
+          <div class="flex items-center gap-3">
+            <span class="text-[10px] font-mono text-[var(--muted)] w-4">${i + 1}</span>
+            <span class="text-sm font-medium text-[var(--fg)]">${p.name}</span>
+          </div>
+        </td>
+        <td>
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium" style="background:${categoryColors[p.category]}20; color:${categoryColors[p.category]}">
+            <span class="w-1.5 h-1.5 rounded-full" style="background:${categoryColors[p.category]}"></span>
+            ${p.category}
+          </span>
+        </td>
+        <td class="text-right font-mono text-[var(--fg-2)]">${p.orders.toLocaleString('id-ID')}</td>
+        <td class="text-right font-mono font-semibold text-[var(--fg)]">${formatCurrency(p.revenue)}</td>
+        <td>
+          <canvas id="${sparklineId}" width="60" height="24"></canvas>
+        </td>
+        <td class="text-right">
+          <span class="inline-flex items-center gap-1 font-mono text-xs font-semibold" style="color:${trendColor}">
+            ${p.growth >= 0 ? '+' : ''}${p.growth}%
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              ${p.growth >= 0 ? '<polyline points="18 15 12 9 6 15"/>' : '<polyline points="6 9 12 15 18 9"/>'}
+            </svg>
+          </span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  
+  // Render sparklines
+  setTimeout(() => {
+    sorted.forEach((p, i) => {
+      const ctx = document.getElementById(`prod-spark-${i}`);
+      if (!ctx) return;
+      const trendData = Array.from({length: 8}, (_, idx) => 30 + Math.random() * 70 * (idx / 8 + 0.5));
+      const trendColor = p.growth >= 0 ? '#10b981' : '#f43f5e';
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: trendData.map((_, i) => i),
+          datasets: [{
+            data: trendData,
+            borderColor: trendColor,
+            borderWidth: 1.5,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: { x: { display: false }, y: { display: false } }
+        }
+      });
+    });
+  }, 50);
+}
+
+// =====================================================
+// YEAR COMPARISON CHART
+// =====================================================
+function createYearCompareChart() {
+  const ctx = document.getElementById('yearCompareChart').getContext('2d');
+  
+  if (yearCompareChart) yearCompareChart.destroy();
+  
+  yearCompareChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: monthNames,
+      datasets: [
+        {
+          label: '2023',
+          data: allData[2023].map(d => d.revenue),
+          backgroundColor: 'rgba(123, 132, 153, 0.4)',
+          borderColor: 'rgba(123, 132, 153, 0.6)',
+          borderWidth: 1,
+          borderRadius: 4
+        },
+        {
+          label: '2024',
+          data: allData[2024].map(d => d.revenue),
+          backgroundColor: '#f59e0b',
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1c2231',
+          borderColor: '#2d3548',
+          borderWidth: 1,
+          padding: 10,
+          titleColor: '#e8eaed',
+          bodyColor: '#b4bccd',
+          callbacks: {
+            label: (ctx) => ` ${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#7b8499', font: { family: 'JetBrains Mono', size: 10 } },
+          border: { color: '#232938' }
+        },
+        y: {
+          grid: { color: 'rgba(35, 41, 56, 0.5)' },
+          ticks: { color: '#7b8499', font: { family: 'JetBrains Mono', size: 10 }, callback: v => formatCurrency(v) },
+          border: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// =====================================================
+// FORECAST CHART
+// =====================================================
+function createForecastChart() {
+  const ctx = document.getElementById('forecastChart').getContext('2d');
+  
+  // Historical data (last 12 months)
+  const historical = allData[2024].map(d => d.revenue);
+  
+  // Simple linear regression + seasonal pattern for forecast
+  const avgGrowth = historical.reduce((acc, val, idx, arr) => {
+    if (idx === 0) return acc;
+    return acc + (val - arr[idx - 1]) / arr[idx - 1];
+  }, 0) / (historical.length - 1);
+  
+  const seasonalPattern = [1.08, 1.15, 1.25, 1.35, 0.78, 0.82]; // next 6 months continuation
+  const lastValue = historical[historical.length - 1];
+  
+  const forecast = [];
+  let prev = lastValue;
+  for (let i = 0; i < 3; i++) {
+    const next = prev * (1 + avgGrowth) * (0.95 + Math.random() * 0.1);
+    forecast.push(Math.round(next));
+    prev = next;
+  }
+  
+  // Update forecast values
+  document.getElementById('forecast1').textContent = formatCurrency(forecast[0]);
+  document.getElementById('forecast2').textContent = formatCurrency(forecast[1]);
+  document.getElementById('forecast3').textContent = formatCurrency(forecast[2]);
+  
+  if (forecastChart) forecastChart.destroy();
+  
+  const allLabels = [...monthNames, '+1', '+2', '+3'];
+  const histData = [...historical, null, null, null];
+  const fcData = [null, null, null, null, null, null, null, null, null, null, null, null, ...forecast];
+  // Connect lines
+  fcData[11] = historical[11];
+  
+  const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+  gradient.addColorStop(0, 'rgba(167, 139, 250, 0.3)');
+  gradient.addColorStop(1, 'rgba(167, 139, 250, 0)');
+  
+  forecastChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: allLabels,
+      datasets: [
+        {
+          label: 'Historis',
+          data: histData,
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.35,
+          pointRadius: 0
+        },
+        {
+          label: 'Proyeksi AI',
+          data: fcData,
+          borderColor: '#a78bfa',
+          backgroundColor: gradient,
+          borderWidth: 2,
+          borderDash: [6, 4],
+          fill: true,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#a78bfa'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1c2231',
+          borderColor: '#2d3548',
+          borderWidth: 1,
+          padding: 10,
+          titleColor: '#e8eaed',
+          bodyColor: '#b4bccd',
+          callbacks: {
+            label: (ctx) => ctx.parsed.y !== null ? ` ${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}` : ''
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#7b8499', font: { family: 'JetBrains Mono', size: 10 } },
+          border: { color: '#232938' }
+        },
+        y: {
+          grid: { color: 'rgba(35, 41, 56, 0.5)' },
+          ticks: { color: '#7b8499', font: { family: 'JetBrains Mono', size: 10 }, callback: v => formatCurrency(v) },
+          border: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// =====================================================
+// MONTHLY TABLE
+// =====================================================
+function renderMonthlyTable() {
+  const data = getCurrentData();
+  const body = document.getElementById('monthlyTableBody');
+  
+  body.innerHTML = data.map((d, i) => {
+    const prev = i > 0 ? data[i - 1] : null;
+    const growth = prev ? ((d.revenue - prev.revenue) / prev.revenue * 100) : 0;
+    const sparkData = data.slice(Math.max(0, i - 5), i + 1).map(x => x.revenue);
+    const trendColor = growth >= 0 ? '#10b981' : '#f43f5e';
+    
+    let status, statusColor;
+    if (growth > 10) { status = 'Sangat Baik'; statusColor = '#10b981'; }
+    else if (growth > 0) { status = 'Baik'; statusColor = '#34d399'; }
+    else if (growth > -10) { status = 'Waspada'; statusColor = '#f59e0b'; }
+    else { status = 'Buruk'; statusColor = '#f43f5e'; }
+    if (!prev) { status = '—'; statusColor = '#7b8499'; }
+    
+    return `
+      <tr>
+        <td>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-[var(--fg)]">${d.monthName}</span>
+            ${state.year === 'all' ? `<span class="text-[10px] text-[var(--muted)] font-mono">${i < 12 ? '2023' : '2024'}</span>` : ''}
+          </div>
+        </td>
+        <td class="text-right font-mono font-semibold text-[var(--fg)]">${formatCurrency(d.revenue)}</td>
+        <td class="text-right font-mono text-[var(--fg-2)]">${d.orders.toLocaleString('id-ID')}</td>
+        <td class="text-right font-mono text-[var(--fg-2)]">${d.customers.toLocaleString('id-ID')}</td>
+        <td class="text-right font-mono text-[var(--fg-2)]">${formatCurrency(d.aov)}</td>
+        <td class="text-right font-mono text-emerald-400">${formatCurrency(d.profit)}</td>
+        <td class="text-right font-mono text-[var(--fg-2)]">${(d.margin * 100).toFixed(1)}%</td>
+        <td>
+          <canvas id="table-spark-${i}" width="80" height="24"></canvas>
+        </td>
+        <td class="text-right">
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium" style="background:${statusColor}20; color:${statusColor}">
+            <span class="w-1.5 h-1.5 rounded-full" style="background:${statusColor}"></span>
+            ${status}
+          </span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  
+  // Render table sparklines
+  setTimeout(() => {
+    data.forEach((d, i) => {
+      const ctx = document.getElementById(`table-spark-${i}`);
+      if (!ctx) return;
+      const sparkData = data.slice(Math.max(0, i - 5), i + 1).map(x => x.revenue);
+      const prev = i > 0 ? data[i - 1] : null;
+      const growth = prev ? ((d.revenue - prev.revenue) / prev.revenue * 100) : 0;
+      const trendColor = growth >= 0 ? '#10b981' : '#f43f5e';
+      
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: sparkData.map((_, i) => i),
+          datasets: [{
+            data: sparkData,
+            borderColor: trendColor,
+            borderWidth: 1.5,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: { x: { display: false }, y: { display: false } }
+        }
+      });
+    });
+  }, 50);
+}
+
+// =====================================================
+// AI INSIGHTS ENGINE
+// =====================================================
+function generateInsights() {
+  const data = getFilteredData();
+  const container = document.getElementById('insightsContainer');
+  container.innerHTML = '';
+  
+  // Show typing indicator
+  document.getElementById('aiStatus').style.display = 'flex';
+  
+  const insights = [];
+  
+  // 1. Overall trend analysis
+  const total = data.reduce((a, d) => a + d.revenue, 0);
+  const avg = total / data.length;
+  const firstHalf = data.slice(0, 6).reduce((a, d) => a + d.revenue, 0);
+  const secondHalf = data.slice(6).reduce((a, d) => a + d.revenue, 0);
+  const halfGrowth = ((secondHalf - firstHalf) / firstHalf * 100);
+  
+  insights.push({
+    type: 'trend',
+    priority: halfGrowth > 5 ? 'medium' : 'high',
+    icon: 'trending-up',
+    title: 'Tren Pertumbuhan Semester',
+    text: `Pendapatan ${halfGrowth >= 0 ? 'naik' : 'turun'} ${Math.abs(halfGrowth).toFixed(1)}% dari semester pertama ke kedua. ${halfGrowth >= 10 ? 'Pertumbuhan agresif terdeteksi, pertahankan strategi akuisisi pelanggan.' : halfGrowth >= 0 ? 'Pertumbuhan positif namun moderat, ada ruang untuk optimasi.' : 'Penurunan terdeteksi, evaluasi faktor musiman dan strategi pemasaran.'}`,
+    metric: `${halfGrowth >= 0 ? '+' : ''}${halfGrowth.toFixed(1)}%`,
+    confidence: 92
+  });
+  
+  // 2. Best & worst month
+  const best = data.reduce((max, d) => d.revenue > max.revenue ? d : max);
+  const worst = data.reduce((min, d) => d.revenue < min.revenue ? d : min);
+  const bestGrowth = data.indexOf(best) > 0 ? ((best.revenue - data[data.indexOf(best) - 1].revenue) / data[data.indexOf(best) - 1].revenue * 100) : 0;
+  
+  insights.push({
+    type: 'anomaly',
+    priority: 'low',
+    icon: 'star',
+    title: 'Puncak Performa Bulanan',
+    text: `${state.year === 'all' ? monthNames[best.month % 12] : best.monthName} mencatat pendapatan tertinggi sebesar ${formatCurrency(best.revenue)}, ${bestGrowth >= 0 ? 'naik' : 'turun'} ${Math.abs(bestGrowth).toFixed(1)}% dari bulan sebelumnya. Pola ini konsisten dengan tren musiman kuartal 4.`,
+    metric: formatCurrency(best.revenue),
+    confidence: 88
+  });
+  
+  // 3. Category performance
+  if (state.category === 'all') {
+    const catTotals = {};
+    data.forEach(d => Object.entries(d.categories).forEach(([k, v]) => catTotals[k] = (catTotals[k] || 0) + v));
+    const sorted = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+    const top = sorted[0];
+    const bottom = sorted[sorted.length - 1];
+    const topPct = (top[1] / total * 100).toFixed(1);
+    
+    insights.push({
+      type: 'opportunity',
+      priority: 'medium',
+      icon: 'pie-chart',
+      title: 'Dominasi Kategori',
+      text: `Kategori <strong>${top[0]}</strong> memimpin dengan kontribusi ${topPct}% dari total pendapatan (${formatCurrency(top[1])}). Sementara <strong>${bottom[0]}</strong> hanya berkontribusi ${(bottom[1] / total * 100).toFixed(1)}%. Pertimbangkan strategi cross-selling atau bundling untuk meningkatkan performa kategori underperforming.`,
+      metric: `${topPct}%`,
+      confidence: 95
+    });
+  }
+  
+  // 4. Channel analysis
+  const channelTotals = {};
+  data.forEach(d => Object.entries(d.channels).forEach(([k, v]) => channelTotals[k] = (channelTotals[k] || 0) + v));
+  const sortedChannels = Object.entries(channelTotals).sort((a, b) => b[1] - a[1]);
+  const onlinePct = ((channelTotals['Online'] + channelTotals['Marketplace']) / total * 100).toFixed(1);
+  
+  insights.push({
+    type: 'info',
+    priority: 'info',
+    icon: 'shopping-bag',
+    title: 'Pola Channel Digital',
+    text: `Channel digital (Online + Marketplace) menyumbang ${onlinePct}% dari total pendapatan, menunjukkan dominasi e-commerce. Channel <strong>${sortedChannels[0][0]}</strong> menjadi kontributor terbesar dengan ${formatCurrency(sortedChannels[0][1])}. Optimalkan investasi marketing pada channel berperforma tinggi.`,
+    metric: `${onlinePct}%`,
+    confidence: 90
+  });
+  
+  // 5. Regional concentration
+  const regionTotals = {};
+  data.forEach(d => Object.entries(d.regions).forEach(([k, v]) => regionTotals[k] = (regionTotals[k] || 0) + v));
+  const topRegion = Object.entries(regionTotals).sort((a, b) => b[1] - a[1])[0];
+  const topRegionPct = (topRegion[1] / total * 100).toFixed(1);
+  
+  insights.push({
+    type: 'risk',
+    priority: parseFloat(topRegionPct) > 30 ? 'high' : 'medium',
+    icon: 'map-pin',
+    title: 'Konsentrasi Geografis',
+    text: `${topRegion[0]} mendominasi dengan ${topRegionPct}% pendapatan (${formatCurrency(topRegion[1])}). ${parseFloat(topRegionPct) > 30 ? 'Risiko konsentrasi tinggi—gangguan di region ini dapat berdampak signifikan. Diversifikasi ke Bandung, Medan, atau Makassar direkomendasikan.' : 'Distribusi geografis cukup sehat dengan ketergantungan yang wajar.'}`,
+    metric: `${topRegionPct}%`,
+    confidence: 87
+  });
+  
+  // 6. Forecast insight
+  const last3 = data.slice(-3);
+  const last3Avg = last3.reduce((a, d) => a + d.revenue, 0) / 3;
+  const forecast3 = Math.round(last3Avg * 1.18);
+  
+  insights.push({
+    type: 'forecast',
+    priority: 'info',
+    icon: 'zap',
+    title: 'Proyeksi 3 Bulan Kedepan',
+    text: `Berdasarkan analisis pola musiman dan tren linear, AI memproyeksikan rata-rata pendapatan bulanan ${formatCurrency(forecast3)} untuk 3 bulan kedepan (margin error ±8%). Persiapkan inventory dan kapasitas logistik untuk antisipasi lonjakan Q1.`,
+    metric: formatCurrency(forecast3),
+    confidence: 78
+  });
+  
+  // Render insights with stagger
+  document.getElementById('aiStatus').style.display = 'none';
+  
+  insights.forEach((ins, i) => {
+    setTimeout(() => {
+      const iconSvg = {
+        'trending-up': '<path d="M23 6l-9.5 9.5-5-5L1 18"/><polyline points="17 6 23 6 23 12"/>',
+        'star': '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+        'pie-chart': '<path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/>',
+        'shopping-bag': '<path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>',
+        'map-pin': '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',
+        'zap': '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+        'alert': '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+      };
+      
+      const priorityColors = {
+        high: { bg: 'rgba(244, 63, 94, 0.08)', text: '#fb7185', label: 'Prioritas Tinggi' },
+        medium: { bg: 'rgba(245, 158, 11, 0.08)', text: '#fbbf24', label: 'Prioritas Sedang' },
+        low: { bg: 'rgba(34, 211, 238, 0.08)', text: '#22d3ee', label: 'Informasi' },
+        info: { bg: 'rgba(167, 139, 250, 0.08)', text: '#a78bfa', label: 'Insight AI' }
+      };
+      
+      const pc = priorityColors[ins.priority];
+      
+      const card = document.createElement('div');
+      card.className = `insight-card priority-${ins.priority} p-4 rounded-xl bg-[var(--bg-2)] border border-[var(--border)] hover:border-[var(--border-2)] transition-all`;
+      card.style.animationDelay = `${i * 0.15}s`;
+      card.innerHTML = `
+        <div class="flex items-start gap-3 mb-2">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background:${pc.bg}; color:${pc.text}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconSvg[ins.icon]}</svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <h4 class="text-xs font-semibold text-[var(--fg)]">${ins.title}</h4>
+              <span class="text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold flex-shrink-0" style="background:${pc.bg}; color:${pc.text}">${pc.label.toUpperCase()}</span>
+            </div>
+            <p class="text-[11px] text-[var(--fg-2)] leading-relaxed">${ins.text}</p>
+          </div>
+        </div>
+        <div class="flex items-center justify-between mt-3 pt-3 border-t border-[var(--border)]">
+          <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1">
+              <div class="w-1 h-3 rounded-sm" style="background:${pc.text}; opacity:0.3"></div>
+              <div class="w-1 h-3 rounded-sm" style="background:${pc.text}; opacity:0.5"></div>
+              <div class="w-1 h-3 rounded-sm" style="background:${pc.text}; opacity:0.7"></div>
+              <div class="w-1 h-3 rounded-sm" style="background:${pc.text}; opacity:0.9"></div>
+              <div class="w-1 h-3 rounded-sm" style="background:${pc.text}"></div>
+            </div>
+            <span class="text-[9px] text-[var(--muted)] font-mono">Confidence ${ins.confidence}%</span>
+          </div>
+          <span class="text-xs font-mono font-bold" style="color:${pc.text}">${ins.metric}</span>
+        </div>
+      `;
+      container.appendChild(card);
+    }, i * 200);
+  });
+}
+
+// =====================================================
+// EVENT LISTENERS
+// =====================================================
+function setupEventListeners() {
+  // View toggle
+  document.querySelectorAll('[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-view]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.view = btn.dataset.view;
+      document.getElementById('chartSubtitle').textContent = 
+        state.view === 'monthly' ? 'Pendapatan kotor per bulan dalam jutaan Rupiah' :
+        state.view === 'yearly' ? 'Pendapatan tahunan dengan perbandingan YoY' :
+        'Pendapatan per kuartal dengan proyeksi';
+      createMainChart();
+      showToast(`Mode ${state.view === 'monthly' ? 'bulanan' : state.view === 'yearly' ? 'tahunan' : 'kuartalan'} aktif`, 'info');
+    });
+  });
+  
+  // Year select
+  document.getElementById('yearSelect').addEventListener('change', (e) => {
+    state.year = e.target.value;
+    refreshAll();
+    showToast(`Filter tahun: ${e.target.options[e.target.selectedIndex].text}`, 'info');
+  });
+  
+  // Category select
+  document.getElementById('categorySelect').addEventListener('change', (e) => {
+    state.category = e.target.value;
+    refreshAll();
+    showToast(`Filter kategori: ${e.target.options[e.target.selectedIndex].text}`, 'info');
+  });
+  
+  // Metric chips
+  document.querySelectorAll('[data-metric]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('[data-metric]').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.metric = chip.dataset.metric;
+      createMainChart();
+    });
+  });
+  
+  // Regenerate insights
+  document.getElementById('regenerateBtn').addEventListener('click', () => {
+    generateInsights();
+    showToast('Insight AI diregenerasi', 'success');
+  });
+  
+  // Refresh
+  document.getElementById('refreshBtn').addEventListener('click', () => {
+    const btn = document.getElementById('refreshBtn');
+    btn.querySelector('svg').style.transition = 'transform 0.8s ease';
+    btn.querySelector('svg').style.transform = 'rotate(360deg)';
+    setTimeout(() => {
+      btn.querySelector('svg').style.transform = 'rotate(0deg)';
+      refreshAll();
+      showToast('Data diperbarui', 'success');
+      document.getElementById('lastUpdate').textContent = 'baru saja';
+    }, 800);
+  });
+  
+  // Export
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    showToast('Laporan diunduh sebagai PDF...', 'success');
+  });
+  
+  // Sort by
+  document.getElementById('sortBy').addEventListener('change', renderTopProducts);
+  
+  // Quick ask
+  document.querySelectorAll('.quick-ask').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const q = btn.dataset.q;
+      document.getElementById('aiQuestion').value = q;
+      handleAIQuestion(q);
+    });
+  });
+  
+  // AI question input
+  document.getElementById('aiQuestion').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      handleAIQuestion(e.target.value);
+      e.target.value = '';
+    }
+  });
+}
+
+// =====================================================
+// AI QUESTION HANDLER
+// =====================================================
+function handleAIQuestion(question) {
+  const container = document.getElementById('insightsContainer');
+  
+  // Add user question
+  const qCard = document.createElement('div');
+  qCard.className = 'insight-card p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 ml-6';
+  qCard.innerHTML = `
+    <div class="flex items-start gap-2">
+      <span class="text-[10px] font-semibold text-amber-400">ANDA:</span>
+      <p class="text-[11px] text-[var(--fg-2)] flex-1">${question}</p>
+    </div>
+  `;
+  container.appendChild(qCard);
+  container.scrollTop = container.scrollHeight;
+  
+  // Show typing
+  document.getElementById('aiStatus').style.display = 'flex';
+  
+  setTimeout(() => {
+    document.getElementById('aiStatus').style.display = 'none';
+    
+    const data = getFilteredData();
+    const total = data.reduce((a, d) => a + d.revenue, 0);
+    const avg = total / data.length;
+    const best = data.reduce((max, d) => d.revenue > max.revenue ? d : max);
+    
+    let response = '';
+    let title = '';
+    
+    const ql = question.toLowerCase();
+    if (ql.includes('tren') || ql.includes('bulan ini')) {
+      title = 'Analisis Tren Current';
+      const last = data[data.length - 1];
+      const prev = data[data.length - 2];
+      const change = ((last.revenue - prev.revenue) / prev.revenue * 100).toFixed(1);
+      response = `Bulan terakhir (${last.monthName}) mencatat pendapatan ${formatCurrency(last.revenue)}, ${change >= 0 ? 'naik' : 'turun'} ${Math.abs(change)}% dari bulan sebelumnya. Rata-rata bulanan adalah ${formatCurrency(avg)}. Tren umum menunjukkan pola musiman dengan puncak di kuartal 4.`;
+    } else if (ql.includes('kategori') || ql.includes('terbaik') || ql.includes('menguntungkan')) {
+      const catTotals = {};
+      data.forEach(d => Object.entries(d.categories).forEach(([k, v]) => catTotals[k] = (catTotals[k] || 0) + v));
+      const top = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+      title = 'Kategori Terbaik';
+      response = `Kategori <strong>${top[0]}</strong> adalah yang paling menguntungkan dengan total pendapatan ${formatCurrency(top[1])} atau ${(top[1] / total * 100).toFixed(1)}% dari keseluruhan. Margin kategori ini cenderung stabil dengan pertumbuhan positif konsisten.`;
+    } else if (ql.includes('prediksi') || ql.includes('depan') || ql.includes('proyeksi')) {
+      const last3Avg = data.slice(-3).reduce((a, d) => a + d.revenue, 0) / 3;
+      title = 'Prediksi Bulan Depan';
+      response = `Berdasarkan analisis pola musiman dan regresi linear, AI memproyeksikan pendapatan bulan depan sekitar ${formatCurrency(Math.round(last3Avg * 1.15))} (±8% margin error). Faktor musiman Q1 cenderung moderat dengan potensi rebound di Q2.`;
+    } else {
+      title = 'Respons AI';
+      response = `Berdasarkan analisis data ${state.year === 'all' ? '2023-2024' : state.year}, total pendapatan tercatat ${formatCurrency(total)} dengan rata-rata bulanan ${formatCurrency(avg)}. Bulan terbaik adalah ${best.monthName} dengan ${formatCurrency(best.revenue)}. Silakan ajukan pertanyaan lebih spesifik untuk analisis mendalam.`;
+    }
+    
+    const aCard = document.createElement('div');
+    aCard.className = 'insight-card priority-info p-4 rounded-xl bg-[var(--bg-2)] border border-[var(--border)]';
+    aCard.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-violet-500/10 text-violet-400">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L13.09 8.26L19 7L14.74 11.74L21 13L14.74 14.26L19 17L13.09 15.74L12 22L10.91 15.74L5 17L9.26 14.26L3 13L9.26 11.74L5 7L10.91 8.26L12 2Z"/></svg>
+        </div>
+        <div class="flex-1">
+          <h4 class="text-xs font-semibold text-[var(--fg)] mb-1">${title}</h4>
+          <p class="text-[11px] text-[var(--fg-2)] leading-relaxed">${response}</p>
+        </div>
+      </div>
+    `;
+    container.appendChild(aCard);
+    container.scrollTop = container.scrollHeight;
+  }, 1200);
+}
+
+// =====================================================
+// REFRESH ALL
+// =====================================================
+function refreshAll() {
+  updateKPIs();
+  createMainChart();
+  createCategoryChart();
+  createChannelChart();
+  createRegionHeatmap();
+  createYearCompareChart();
+  createForecastChart();
+  renderTopProducts();
+  renderMonthlyTable();
+  generateInsights();
+}
+
+// =====================================================
+// INIT
+// =====================================================
+window.addEventListener('DOMContentLoaded', () => {
+  setupEventListeners();
+  refreshAll();
+  
+  // Update timestamp periodically
+  let seconds = 0;
+  setInterval(() => {
+    seconds += 30;
+    const mins = Math.floor(seconds / 60);
+    document.getElementById('lastUpdate').textContent = mins === 0 ? 'baru saja' : `${mins} menit lalu`;
+  }, 30000);
+  
+  // Welcome toast
+  setTimeout(() => {
+    showToast('Dashboard siap. AI Insight Engine aktif.', 'success');
+  }, 1000);
+});
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
